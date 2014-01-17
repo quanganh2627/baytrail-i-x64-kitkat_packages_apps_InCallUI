@@ -26,6 +26,7 @@ import com.android.services.telephony.common.AudioMode;
 import com.android.services.telephony.common.Call;
 import com.android.services.telephony.common.ICallCommandService;
 import com.android.services.telephony.common.ICallHandlerService;
+import com.android.services.telephony.common.VideoMode;
 
 import java.util.AbstractMap;
 import java.util.List;
@@ -147,6 +148,11 @@ public class CallHandlerService extends Service {
             } catch (Exception e) {
                 Log.e(TAG, "Error processing onUpdate() call.", e);
             }
+        }
+
+        @Override
+        public void onVideoModeChange(Call call, VideoMode videoMode) {
+            Log.i(TAG, "onVideoModeChange: " + call + ", " + videoMode);
         }
 
         @Override

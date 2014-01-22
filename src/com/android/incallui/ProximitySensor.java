@@ -151,6 +151,12 @@ public class ProximitySensor implements AccelerometerListener.OrientationListene
             mUiShowing = false;
         }
         updateProximitySensorMode();
+        if (isScreenReallyOff()) {
+            mAccelerometerListener.enable(false);
+        } else {
+            mAccelerometerListener.enable(true);
+        }
+
     }
 
     /**

@@ -30,6 +30,8 @@ import android.provider.ContactsContract.PhoneLookup;
 import android.telephony.PhoneNumberUtils;
 import android.text.TextUtils;
 
+import com.android.services.telephony.common.CallIdentification;
+
 /**
  * Helper class to make it easier to run asynchronous caller-id lookup queries.
  * @see CallerInfo
@@ -242,6 +244,11 @@ public class CallerInfoAsyncQuery {
                         mCallerInfo = newCallerInfo;
                         Log.d(this, "#####async contact look up with numeric username"
                                 + mCallerInfo);
+                    }
+
+                    if (TextUtils.isEmpty(mCallerInfo.name)) {
+                        CallIdentification call = (CallIdentification) cw.cookie;
+                        mCallerInfo.name = call.getCnapName();
                     }
 
                     // Final step: look up the geocoded description.

@@ -117,9 +117,9 @@ public class CallerInfoUtils {
             int cnapSpecialCase = checkCnapSpecialCases(number);
             if (cnapSpecialCase != CNAP_SPECIAL_CASE_NO) {
                 // For all special strings, change number & numberPresentation.
-                if (cnapSpecialCase == Call.PRESENTATION_RESTRICTED) {
+                if (cnapSpecialCase == Call.NAME_PRESENTATION_RESTRICTED) {
                     number = context.getString(R.string.private_num);
-                } else if (cnapSpecialCase == Call.PRESENTATION_UNKNOWN) {
+                } else if (cnapSpecialCase == Call.NAME_PRESENTATION_UNKNOWN) {
                     number = context.getString(R.string.unknown);
                 }
                 Log.d(TAG, "SpecialCnap: number=" + toLogSafePhoneNumber(number)
@@ -142,13 +142,13 @@ public class CallerInfoUtils {
                 n.equals("P") ||
                 n.equals("RES")) {
             Log.d(TAG, "checkCnapSpecialCases, PRIVATE string: " + n);
-            return Call.PRESENTATION_RESTRICTED;
+            return Call.NAME_PRESENTATION_RESTRICTED;
         } else if (n.equals("UNAVAILABLE") ||
                 n.equals("UNKNOWN") ||
                 n.equals("UNA") ||
                 n.equals("U")) {
             Log.d(TAG, "checkCnapSpecialCases, UNKNOWN string: " + n);
-            return Call.PRESENTATION_UNKNOWN;
+            return Call.NAME_PRESENTATION_UNKNOWN;
         } else {
             Log.d(TAG, "checkCnapSpecialCases, normal str. number: " + n);
             return CNAP_SPECIAL_CASE_NO;

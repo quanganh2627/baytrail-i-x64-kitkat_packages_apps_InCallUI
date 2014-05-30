@@ -235,8 +235,13 @@ public class CallCardPresenter extends Presenter<CallCardPresenter.CallCardUi>
             return false;
         }
 
+        boolean hasCnapChanged = (call1.getCnapName() == null && call2.getCnapName() != null)
+                || (call1.getCnapName() != null && call2.getCnapName() == null)
+                || ((call1.getCnapName() != null && call2.getCnapName() != null)
+                && !call1.getCnapName().equals(call2.getCnapName()));
+
         // otherwise compare call Ids
-        return call1.getCallId() == call2.getCallId();
+        return (call1.getCallId() == call2.getCallId()) && !hasCnapChanged;
     }
 
     private void maybeStartSearch(Call call, boolean isPrimary) {

@@ -123,6 +123,12 @@ public class ContactInfoCache implements ContactsAsyncHelper.OnImageLoadComplete
         if (cacheEntry != null) {
             Log.d(TAG, "Contact lookup. In memory cache hit; lookup "
                     + (callBacks == null ? "complete" : "still running"));
+
+            // cacheEntry is not updated when CNAP changes so we force the update
+            if (cacheEntry.name == null && identification.getCnapName() != null) {
+                cacheEntry.name = identification.getCnapName();
+            }
+
             callback.onContactInfoComplete(callId, cacheEntry);
             // If no other callbacks are in flight, we're done.
             if (callBacks == null) {

@@ -125,8 +125,10 @@ public class ContactInfoCache implements ContactsAsyncHelper.OnImageLoadComplete
                     + (callBacks == null ? "complete" : "still running"));
 
             // cacheEntry is not updated when CNAP changes so we force the update
-            if (cacheEntry.name == null && identification.getCnapName() != null) {
+            if ((cacheEntry.name == null || cacheEntry.canOverrideName)
+                    && identification.getCnapName() != null) {
                 cacheEntry.name = identification.getCnapName();
+                cacheEntry.canOverrideName = false;
             }
 
             callback.onContactInfoComplete(callId, cacheEntry);
@@ -356,6 +358,7 @@ public class ContactInfoCache implements ContactsAsyncHelper.OnImageLoadComplete
         String displayLocation = null;
         String label = null;
         boolean isSipCall = false;
+        boolean canOverrideName = false;
 
             // It appears that there is a small change in behaviour with the
             // PhoneUtils' startGetCallerInfo whereby if we query with an
@@ -398,6 +401,7 @@ public class ContactInfoCache implements ContactsAsyncHelper.OnImageLoadComplete
                     // No name *or* number! Display a generic "unknown" string
                     // (or potentially some other default based on the presentation.)
                     displayName = getPresentationString(context, presentation);
+                    canOverrideName = true;
                     Log.d(TAG, "  ==> no name *or* number! displayName = " + displayName);
                 } else if (presentation != Call.PRESENTATION_ALLOWED) {
                     // This case should never happen since the network should never send a phone #
@@ -457,6 +461,7 @@ public class ContactInfoCache implements ContactsAsyncHelper.OnImageLoadComplete
         cce.location = displayLocation;
         cce.label = label;
         cce.isSipCall = isSipCall;
+        cce.canOverrideName = canOverrideName;
     }
 
     /**
@@ -513,6 +518,7 @@ public class ContactInfoCache implements ContactsAsyncHelper.OnImageLoadComplete
         public Drawable photo;
         public boolean isSipCall;
         public Uri personUri; // Used for local photo load
+        public boolean canOverrideName;
 
         @Override
         public String toString() {
@@ -523,6 +529,7 @@ public class ContactInfoCache implements ContactsAsyncHelper.OnImageLoadComplete
                     .add("label", label)
                     .add("photo", photo)
                     .add("isSipCall", isSipCall)
+                    .add("canOverrideName", canOverrideName)
                     .toString();
         }
     }

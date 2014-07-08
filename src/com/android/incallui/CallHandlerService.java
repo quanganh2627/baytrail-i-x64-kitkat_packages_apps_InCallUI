@@ -184,6 +184,11 @@ public class CallHandlerService extends Service {
             mMainHandler.sendMessage(mMainHandler.obtainMessage(ON_POST_CHAR_WAIT, callId, 0,
                     chars));
         }
+
+        public void setActiveSimId(int simId) {
+            Log.i(TAG, "setAcitveSimId: "+simId);
+            InCallUi.getInstance().setActiveSimId(simId);
+        }
     };
 
     private void doStart(ICallCommandService service) {

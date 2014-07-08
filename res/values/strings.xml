@@ -491,6 +491,19 @@
         <item>never</item>
     </string-array>
 
+    <!-- In-call screen: status label for a call of sim 1 in the "dialing" state -->
+    <string name="card_1_title_dialing">SIM 1 Dialing</string>
+    <!-- In-call screen: status label for a call of sim 1 in the "incoming" state -->
+    <string name="card_1_title_incoming_call">SIM 1 Incoming call</string>
+    <!-- In-call screen: status label for a call of sim 1 in the "offhook" state -->
+    <string name="card_1_title_in_call">SIM 1 In call</string>
+    <!-- In-call screen: status label for a call of sim 2 in the "dialing" state -->
+    <string name="card_2_title_dialing">SIM 2 Dialing</string>
+    <!-- In-call screen: status label for a call of sim 2 in the "incoming" state -->
+    <string name="card_2_title_incoming_call">SIM 2 Incoming call</string>
+    <!-- In-call screen: status label for a call of sim 2 in the "offhook" state -->
+    <string name="card_2_title_in_call">SIM 2 In call</string>
+
     <!-- Setting option name to pick ringtone (a list dialog comes up). [CHAR LIMIT=30] -->
     <string name="ringtone_title" msgid="5379026328015343686">Phone ringtone</string>
 

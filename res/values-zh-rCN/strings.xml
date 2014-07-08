@@ -177,4 +177,10 @@
     <string name="dialpad_7_number" msgid="277455349526398354">"7"</string>
     <string name="dialpad_8_number" msgid="4764964930466503513">"8"</string>
     <string name="dialpad_9_number" msgid="4023642800448238950">"9"</string>
+    <string name="card_1_title_dialing">卡 1 正在拨号</string>
+    <string name="card_1_title_incoming_call">卡 1 来电</string>
+    <string name="card_1_title_in_call">卡 1 正在通话</string>
+    <string name="card_2_title_dialing">卡 2 正在拨号</string>
+    <string name="card_2_title_incoming_call">卡 2 来电</string>
+    <string name="card_2_title_in_call">卡 2 正在通话</string>
 </resources>

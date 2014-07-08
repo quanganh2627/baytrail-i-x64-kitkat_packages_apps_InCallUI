@@ -26,10 +26,10 @@ import android.content.Intent;
 import com.android.services.telephony.common.Call;
 import com.android.services.telephony.common.Call.Capabilities;
 import com.google.common.collect.Lists;
-
+import com.android.internal.telephony.TelephonyConstants;
 import java.util.ArrayList;
 import java.util.Set;
-
+import android.net.Uri;
 /**
  * Takes updates from the CallList and notifies the InCallActivity (UI)
  * of the changes.
@@ -702,6 +702,7 @@ public class InCallPresenter implements CallList.Listener {
                 | Intent.FLAG_ACTIVITY_EXCLUDE_FROM_RECENTS
                 | Intent.FLAG_ACTIVITY_NO_USER_ACTION);
         intent.setClass(mContext, InCallActivity.class);
+		
         if (showDialpad) {
             intent.putExtra(InCallActivity.SHOW_DIALPAD_EXTRA, true);
         }

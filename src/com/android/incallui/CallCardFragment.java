@@ -34,6 +34,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.android.services.telephony.common.Call;
+import com.android.internal.telephony.TelephonyConstants;
 
 import java.util.List;
 
@@ -331,7 +332,16 @@ public class CallCardFragment extends BaseFragment<CallCardPresenter, CallCardPr
 
     private String getConferenceString(boolean isGeneric) {
         Log.v(this, "isGenericString: " + isGeneric);
-        final int resId = isGeneric ? R.string.card_title_in_call : R.string.card_title_conf_call;
+        int resId = R.string.card_title_conf_call;
+        if (isGeneric) {
+            if (TelephonyConstants.IS_DSDS) {
+                resId = InCallUi.getInstance().isSlotOne()
+                            ? R.string.card_1_title_in_call
+                            : R.string.card_2_title_in_call;
+            } else {
+                resId = R.string.card_title_in_call;
+            }
+        }
         return getView().getResources().getString(resId);
     }
 
@@ -374,12 +384,23 @@ public class CallCardFragment extends BaseFragment<CallCardPresenter, CallCardPr
         } else if (Call.State.ONHOLD == state) {
             callStateLabel = context.getString(R.string.card_title_on_hold);
         } else if (Call.State.DIALING == state) {
-            callStateLabel = context.getString(R.string.card_title_dialing);
+            if (TelephonyConstants.IS_DSDS) {
+                callStateLabel = InCallUi.getInstance().isSlotOne()
+                                    ? context.getString(R.string.card_1_title_dialing)
+                                    : context.getString(R.string.card_2_title_dialing);
+            } else {
+                callStateLabel = context.getString(R.string.card_title_dialing);
+            }
         } else if (Call.State.REDIALING == state) {
             callStateLabel = context.getString(R.string.card_title_redialing);
         } else if (Call.State.INCOMING == state || Call.State.CALL_WAITING == state) {
-            callStateLabel = context.getString(R.string.card_title_incoming_call);
-
+            if (TelephonyConstants.IS_DSDS) {
+                callStateLabel = InCallUi.getInstance().isSlotOne()
+                                    ? context.getString(R.string.card_1_title_incoming_call)
+                                    : context.getString(R.string.card_2_title_incoming_call);
+            } else {
+                callStateLabel = context.getString(R.string.card_title_incoming_call);
+            }
         } else if (Call.State.DISCONNECTING == state) {
             // While in the DISCONNECTING state we display a "Hanging up"
             // message in order to make the UI feel more responsive.  (In

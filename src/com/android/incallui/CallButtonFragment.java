@@ -18,6 +18,7 @@ package com.android.incallui;
 
 import android.graphics.drawable.LayerDrawable;
 import android.os.Bundle;
+import android.os.SystemProperties;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -56,6 +57,8 @@ public class CallButtonFragment
     private View mManageConferenceButton;
     private View mGenericMergeButton;
 
+    private boolean anzhen4_mrd8 = false;
+
     @Override
     CallButtonPresenter createPresenter() {
         // TODO: find a cleaner way to include audio mode provider than
@@ -71,6 +74,8 @@ public class CallButtonFragment
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        String productName = SystemProperties.get("ro.product.name");
+        anzhen4_mrd8 = (productName != null && productName.startsWith("anzhen4_mrd8"));
     }
 
     @Override
@@ -347,7 +352,7 @@ public class CallButtonFragment
      */
     private void updateAudioButtons(int supportedModes) {
         final boolean bluetoothSupported = isSupported(AudioMode.BLUETOOTH);
-        final boolean speakerSupported = isSupported(AudioMode.SPEAKER);
+        final boolean speakerSupported = anzhen4_mrd8 ? false : isSupported(AudioMode.SPEAKER);
 
         boolean audioButtonEnabled = false;
         boolean audioButtonChecked = false;
@@ -474,8 +479,9 @@ public class CallButtonFragment
         final MenuItem wiredHeadsetItem = menu.findItem(R.id.audio_mode_wired_headset);
 
         final boolean usingHeadset = isSupported(AudioMode.WIRED_HEADSET);
-        earpieceItem.setVisible(!usingHeadset);
-        earpieceItem.setEnabled(!usingHeadset);
+        earpieceItem.setVisible(anzhen4_mrd8 ? false : !usingHeadset);
+        earpieceItem.setEnabled(anzhen4_mrd8 ? false : !usingHeadset);
+
         wiredHeadsetItem.setVisible(usingHeadset);
         wiredHeadsetItem.setEnabled(usingHeadset);
         // TODO: Show the above item (either earpieceItem or wiredHeadsetItem)

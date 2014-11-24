@@ -173,7 +173,8 @@ public class StatusBarNotifier implements InCallPresenter.InCallStateListener {
      * cancels the notification if the phone is totally idle.
      */
     private void updateInCallNotification(final InCallState state, CallList callList) {
-        Log.d(this, "updateInCallNotification...");
+        Log.d(this, "updateInCallNotification... CallState=" + state + ", isShowingInCallUi="
+                + InCallPresenter.getInstance().isShowingInCallUi());
 
         Call call = getCallToShow(callList);
 
@@ -193,7 +194,7 @@ public class StatusBarNotifier implements InCallPresenter.InCallStateListener {
                 // the "Call ended" screen. So check that we have an active connection too.
                 (call != null) &&
 
-                // We show a notification iff there is an active call.
+                // We show a notification if there is an active call.
                 state.isConnectingOrConnected() &&
 
                 // If the UI is already showing, then for most cases we do not want to show
@@ -205,6 +206,14 @@ public class StatusBarNotifier implements InCallPresenter.InCallStateListener {
                 // a notification anyway.
                 (!isOutgoingWithoutIncallUi ||
                         mNotificationTimer.getState() == NotificationTimer.State.FIRED);
+
+        // For call upgrade
+        if ((call != null)
+                && (call.getSessionModificationState()
+                        == Call.SessionModificationState.RECEIVED_UPGRADE_TO_VIDEO_REQUEST)) {
+            Log.d(this, "updateInCallNotification, notify of callupgrade to video!");
+            showNotificationNow = true;
+        }
 
         if (showNotificationNow) {
             showNotification(call);
@@ -336,6 +345,8 @@ public class StatusBarNotifier implements InCallPresenter.InCallStateListener {
             addHangupAction(builder);
         } else if (state == Call.State.INCOMING || state == Call.State.CALL_WAITING) {
             addDismissAction(builder);
+            Log.d(this, "createIncomingCallNotification: call.isVideoCall()="
+                    + call.isVideoCall(mContext));
             if (call.isVideoCall(mContext)) {
                 addVoiceAction(builder);
                 addVideoCallAction(builder);
@@ -550,16 +561,16 @@ public class StatusBarNotifier implements InCallPresenter.InCallStateListener {
         Log.i(this, "Will show \"accept\" action in the incoming call Notification");
 
         PendingIntent acceptVideoPendingIntent = createNotificationPendingIntent(
-                mContext, InCallApp.ACTION_ANSWER_VOICE_INCOMING_CALL);
+                mContext, InCallApp.ACTION_ACCEPT_VIDEO_UPGRADE_REQUEST);
         builder.addAction(0, mContext.getText(R.string.notification_action_accept),
-        acceptVideoPendingIntent);
+                acceptVideoPendingIntent);
     }
 
     private void addDismissUpgradeRequestAction(Notification.Builder builder) {
         Log.i(this, "Will show \"dismiss\" action in the incoming call Notification");
 
         PendingIntent declineVideoPendingIntent = createNotificationPendingIntent(
-                mContext, InCallApp.ACTION_ANSWER_VOICE_INCOMING_CALL);
+                mContext, InCallApp.ACTION_DECLINE_VIDEO_UPGRADE_REQUEST);
         builder.addAction(0, mContext.getText(R.string.notification_action_dismiss),
                 declineVideoPendingIntent);
     }

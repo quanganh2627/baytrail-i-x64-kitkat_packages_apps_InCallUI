@@ -173,6 +173,8 @@ public class VideoCallPresenter extends Presenter<VideoCallPresenter.VideoCallUi
         InCallPresenter.getInstance().addListener(this);
         InCallPresenter.getInstance().addIncomingCallListener(this);
         InCallPresenter.getInstance().addOrientationListener(this);
+        // To get updates of video call details changes
+        InCallPresenter.getInstance().addDetailsListener(this);
 
         // Register for surface and video events from {@link InCallVideoCallListener}s.
         InCallVideoCallListenerNotifier.getInstance().addSurfaceChangeListener(this);
@@ -193,6 +195,7 @@ public class VideoCallPresenter extends Presenter<VideoCallPresenter.VideoCallUi
         InCallPresenter.getInstance().removeListener(this);
         InCallPresenter.getInstance().removeIncomingCallListener(this);
         InCallPresenter.getInstance().removeOrientationListener(this);
+        InCallPresenter.getInstance().removeDetailsListener(this);
         InCallVideoCallListenerNotifier.getInstance().removeSurfaceChangeListener(this);
         InCallVideoCallListenerNotifier.getInstance().removeVideoEventListener(this);
         InCallVideoCallListenerNotifier.getInstance().removeSessionModificationListener(this);
@@ -213,6 +216,7 @@ public class VideoCallPresenter extends Presenter<VideoCallPresenter.VideoCallUi
     public void onSurfaceCreated(int surface) {
         final VideoCallUi ui = getUi();
 
+        Log.d(this, "onSurfaceCreated() entering surface=" + surface);
         if (ui == null || mVideoCall == null) {
             return;
         }
@@ -221,10 +225,11 @@ public class VideoCallPresenter extends Presenter<VideoCallPresenter.VideoCallUi
         // capabilities, but not yet set the surface, we will set the surface now.
         if (surface == VideoCallFragment.SURFACE_PREVIEW &&
                 mPreviewSurfaceState == PreviewSurfaceState.CAPABILITIES_RECEIVED) {
-
+            Log.d(this, "onSurfaceCreated setting SURFACE_PREVIEW");
             mPreviewSurfaceState = PreviewSurfaceState.SURFACE_SET;
             mVideoCall.setPreviewSurface(ui.getPreviewVideoSurface());
         } else if (surface == VideoCallFragment.SURFACE_DISPLAY) {
+            Log.d(this, "onSurfaceCreated setting SURFACE_DISPLAY");
             mVideoCall.setDisplaySurface(ui.getDisplayVideoSurface());
         }
     }
@@ -238,7 +243,9 @@ public class VideoCallPresenter extends Presenter<VideoCallPresenter.VideoCallUi
      * @param height The new height of the surface.
      */
     public void onSurfaceChanged(int surface, int format, int width, int height) {
-        //Do stuff
+        // Do stuff
+        Log.d(this, "onSurfaceChanged ignored surface=" + surface + ",width=" + width + ",height="
+                + height);
     }
 
     /**
@@ -247,6 +254,7 @@ public class VideoCallPresenter extends Presenter<VideoCallPresenter.VideoCallUi
      * @param surface The surface which was destroyed.
      */
     public void onSurfaceDestroyed(int surface) {
+        Log.d(this, "onSurfaceDestroyed() entering surface=" + surface);
         final VideoCallUi ui = getUi();
         if (ui == null || mVideoCall == null) {
             return;
@@ -256,6 +264,8 @@ public class VideoCallPresenter extends Presenter<VideoCallPresenter.VideoCallUi
             mVideoCall.setDisplaySurface(null);
         } else if (surface == VideoCallFragment.SURFACE_PREVIEW) {
             mVideoCall.setPreviewSurface(null);
+            // Also disable camera as preview is closed
+            mVideoCall.setCamera(null);
         }
     }
 
@@ -294,6 +304,8 @@ public class VideoCallPresenter extends Presenter<VideoCallPresenter.VideoCallUi
     @Override
     public void onStateChange(InCallPresenter.InCallState oldState,
             InCallPresenter.InCallState newState, CallList callList) {
+
+        Log.d(this, "onStateChange() entering");
         // Bail if video calling is disabled for the device.
         if (!CallUtil.isVideoEnabled(mContext)) {
             return;
@@ -313,13 +325,18 @@ public class VideoCallPresenter extends Presenter<VideoCallPresenter.VideoCallUi
             primary = callList.getActiveCall();
         }
 
+
         final boolean primaryChanged = !Objects.equals(mPrimaryCall, primary);
+
         if (primaryChanged) {
             mPrimaryCall = primary;
+
+            Log.d(this, "onStateChange primary changed and mPrimaryCall=" + mPrimaryCall);
 
             if (primary != null) {
                 checkForVideoCallChange();
                 mIsVideoCall = mPrimaryCall.isVideoCall(mContext);
+                Log.d(this, "onStateChange mIsVideoCall=" + mIsVideoCall);
                 if (mIsVideoCall) {
                     enterVideoMode();
                 } else {
@@ -341,6 +358,7 @@ public class VideoCallPresenter extends Presenter<VideoCallPresenter.VideoCallUi
      */
     @Override
     public void onDetailsChanged(Call call, android.telecom.Call.Details details) {
+        Log.d(this, "onDetailsChanged() entering");
         // If the details change is not for the currently active call no update is required.
         if (!call.equals(mPrimaryCall)) {
             return;
@@ -354,6 +372,7 @@ public class VideoCallPresenter extends Presenter<VideoCallPresenter.VideoCallUi
      */
     private void checkForVideoCallChange() {
         VideoCall videoCall = mPrimaryCall.getTelecommCall().getVideoCall();
+        Log.d(this, "checkForVideoCallChange() entering videoCall=" + videoCall);
         if (!Objects.equals(videoCall, mVideoCall)) {
             changeVideoCall(videoCall);
         }
@@ -364,7 +383,8 @@ public class VideoCallPresenter extends Presenter<VideoCallPresenter.VideoCallUi
      */
     private void checkForVideoStateChange() {
         boolean newVideoState = mPrimaryCall.isVideoCall(mContext);
-
+        Log.d(this, "checkForVideoStateChange() entering,  newVideoState=" + newVideoState
+                + " and mIsVideoCall=" + mIsVideoCall);
         // Check if video state changed
         if (mIsVideoCall != newVideoState) {
             mIsVideoCall = newVideoState;
@@ -384,10 +404,12 @@ public class VideoCallPresenter extends Presenter<VideoCallPresenter.VideoCallUi
      * @param videoCall The new video call.
      */
     private void changeVideoCall(VideoCall videoCall) {
+        Log.d(this, "changeVideoCall entering,  videoCall=" + videoCall);
         // Null out the surfaces on the previous video call.
         if (mVideoCall != null) {
             mVideoCall.setDisplaySurface(null);
             mVideoCall.setPreviewSurface(null);
+            // TODO: If it is not already done we should pause video on the previous call
         }
 
         mVideoCall = videoCall;
@@ -398,8 +420,24 @@ public class VideoCallPresenter extends Presenter<VideoCallPresenter.VideoCallUi
      * TODO(vt): Need to adjust size and orientation of preview surface here.
      */
     private void enterVideoMode() {
+
+        Log.d(this, "enterVideoMode() entering");
+
         VideoCallUi ui = getUi();
         if (ui == null) {
+            return;
+        }
+
+        if (mVideoCall != null) {
+            // Set the device orientation first (especially if we just restarted the activity)
+            mVideoCall.setDeviceOrientation(mDeviceOrientation);
+        }
+
+        // Do not reset the surfaces if we just restarted the activity due to an orientation
+        // change. Also do not inflate video call views as this will be done upon activity
+        // new creation.
+        if (ui.isActivityRestart()) {
+            Log.d(this, "ui.isActivityRestarted = true");
             return;
         }
 
@@ -409,21 +447,23 @@ public class VideoCallPresenter extends Presenter<VideoCallPresenter.VideoCallUi
         // Communicate the current camera to telephony and make a request for the camera
         // capabilities.
         if (mVideoCall != null) {
-            // Do not reset the surfaces if we just restarted the activity due to an orientation
-            // change.
-            if (ui.isActivityRestart()) {
-                return;
-            }
+            Log.d(this, "enterVideoMode mVideoCall = " + mVideoCall);
 
             mPreviewSurfaceState = PreviewSurfaceState.CAMERA_SET;
             InCallCameraManager cameraManager = InCallPresenter.getInstance().
                     getInCallCameraManager();
             mVideoCall.setCamera(cameraManager.getActiveCameraId());
+
             mVideoCall.requestCameraCapabilities();
+            Log.d(this,
+                    "enterVideoMode requestedCameraCapabilities ui.isDisplayVideoSurfaceCreated()="
+                            + ui.isDisplayVideoSurfaceCreated());
 
             if (ui.isDisplayVideoSurfaceCreated()) {
                 mVideoCall.setDisplaySurface(ui.getDisplayVideoSurface());
             }
+        } else {
+            Log.e(this, "enterVideoMode mVideoCall == null");
         }
 
         mPreVideoAudioMode = AudioModeProvider.getInstance().getAudioMode();
@@ -438,8 +478,14 @@ public class VideoCallPresenter extends Presenter<VideoCallPresenter.VideoCallUi
         if (ui == null) {
             return;
         }
+        Log.d(this, "exitVideoMode() entering");
         InCallPresenter.getInstance().setInCallAllowsOrientationChange(false);
         ui.showVideoUi(false);
+
+        if (mVideoCall != null) {
+            // Also disable camera otherwise it will be already in use for next upgrade
+            mVideoCall.setCamera(null);
+        }
 
         if (mPreVideoAudioMode != AudioModeProvider.AUDIO_MODE_INVALID) {
             TelecomAdapter.getInstance().setAudioRoute(mPreVideoAudioMode);
@@ -459,7 +505,7 @@ public class VideoCallPresenter extends Presenter<VideoCallPresenter.VideoCallUi
         if (!call.equals(mPrimaryCall)) {
             return;
         }
-
+        Log.d(this, "onPeerPauseStateChanged() entering");
         // TODO(vt): Show/hide the peer contact photo.
     }
 
@@ -475,7 +521,7 @@ public class VideoCallPresenter extends Presenter<VideoCallPresenter.VideoCallUi
         if (!call.equals(mPrimaryCall)) {
             return;
         }
-
+        Log.d(this, "onUpdatePeerDimensions() entering");
         // TODO(vt): Change display surface aspect ratio.
     }
 
@@ -491,10 +537,12 @@ public class VideoCallPresenter extends Presenter<VideoCallPresenter.VideoCallUi
     public void onCameraDimensionsChange(Call call, int width, int height) {
         VideoCallUi ui = getUi();
         if (ui == null) {
+            Log.e(this, "onCameraDimensionsChange ui is null ");
             return;
         }
 
         if (!call.equals(mPrimaryCall)) {
+            Log.e(this, "onCameraDimensionsChange mPrimaryCall is not current call");
             return;
         }
 
@@ -505,6 +553,8 @@ public class VideoCallPresenter extends Presenter<VideoCallPresenter.VideoCallUi
         if (width > 0 && height > 0) {
             aspectRatio = (float) width / (float) height;
         }
+        Log.d(this, "onCameraDimensionsChange() aspectRatio = " + aspectRatio
+                + " , mDeviceOrientation=" + mDeviceOrientation);
         setPreviewSize(mDeviceOrientation, aspectRatio);
 
         // Check if the preview surface is ready yet; if it is, set it on the {@code VideoCall}.
@@ -516,23 +566,26 @@ public class VideoCallPresenter extends Presenter<VideoCallPresenter.VideoCallUi
     }
 
     /**
-     * Handles hanges to the device orientation.
+     * Handles changes to the device orientation.
      * See: {@link Configuration.ORIENTATION_LANDSCAPE}, {@link Configuration.ORIENTATION_PORTRAIT}
      * @param orientation The device orientation.
      */
     @Override
     public void onDeviceOrientationChanged(int orientation) {
+        Log.d(this, "onDeviceOrientationChanged() new orientation=" + orientation);
         mDeviceOrientation = orientation;
     }
 
     @Override
     public void onUpgradeToVideoRequest(Call call) {
+        Log.d(this, "onUpgradeToVideoRequest() entering, call=" + call);
         mPrimaryCall.setSessionModificationState(
                 Call.SessionModificationState.RECEIVED_UPGRADE_TO_VIDEO_REQUEST);
     }
 
     @Override
     public void onUpgradeToVideoSuccess(Call call) {
+        Log.d(this, "onUpgradeToVideoSuccess() entering, call=" + call);
         if (mPrimaryCall == null || !Call.areSame(mPrimaryCall, call)) {
             return;
         }
@@ -542,6 +595,7 @@ public class VideoCallPresenter extends Presenter<VideoCallPresenter.VideoCallUi
 
     @Override
     public void onUpgradeToVideoFail(Call call) {
+        Log.d(this, "onUpgradeToVideoFail() entering, call=" + call);
         if (mPrimaryCall == null || !Call.areSame(mPrimaryCall, call)) {
             return;
         }
@@ -559,7 +613,14 @@ public class VideoCallPresenter extends Presenter<VideoCallPresenter.VideoCallUi
 
     @Override
     public void onDowngradeToAudio(Call call) {
-        // Implementing to satsify interface.
+        Log.d(this, "onDowngradeToAudio() entering, call=" + call);
+        if (!call.equals(mPrimaryCall)) {
+            // This could happen in multiple simultaneous call scenarios
+            Log.d(this, "onDowngradeToAudio mPrimaryCall is not current call");
+            return;
+        }
+        // exit video mode
+        exitVideoMode();
     }
 
     /**
@@ -570,6 +631,8 @@ public class VideoCallPresenter extends Presenter<VideoCallPresenter.VideoCallUi
      * @param aspectRatio The aspect ratio of the camera (width / height).
      */
     private void setPreviewSize(int orientation, float aspectRatio) {
+        Log.d(this, "setPreviewSize() entering, orientation=" + orientation + ", aspectRatio="
+                + aspectRatio);
         VideoCallUi ui = getUi();
         if (ui == null) {
             return;
@@ -585,6 +648,7 @@ public class VideoCallPresenter extends Presenter<VideoCallPresenter.VideoCallUi
             width = (int) mMinimumVideoDimension;
             height = (int) (mMinimumVideoDimension * aspectRatio);
         }
+        Log.d(this, "settingPreviewSize to (" + width + "," + height + ")");
         ui.setPreviewSize(width, height);
     }
 

@@ -206,13 +206,17 @@ public final class Call {
     }
 
     private void updateFromTelecommCall() {
-        Log.d(this, "updateFromTelecommCall: " + mTelecommCall);
+        Log.d(this, "updateFromTelecommCall() entering");
         setState(translateState(mTelecommCall.getState()));
         setDisconnectCause(mTelecommCall.getDetails().getDisconnectCause());
 
+        Log.d(this, "updateFromTelecommCall: mTelecommCall.videocall="
+                + mTelecommCall.getVideoCall());
         if (mTelecommCall.getVideoCall() != null) {
             if (mVideoCallListener == null) {
                 mVideoCallListener = new InCallVideoCallListener(this);
+                Log.d(this, "updateFromTelecommCall: Created InCallVideoCallListener"
+                        + " for call=" + this);
             }
             mTelecommCall.getVideoCall().setVideoCallListener(mVideoCallListener);
         }
@@ -366,8 +370,15 @@ public final class Call {
     }
 
     public boolean isVideoCall(Context context) {
-        return CallUtil.isVideoEnabled(context) &&
-                VideoProfile.VideoState.isBidirectional(getVideoState());
+        Log.d(this, "isVideoCall() => CallUtil.isVideoEnabled is "
+                + CallUtil.isVideoEnabled(context)
+                + ", getVideoState()=" + getVideoState());
+        // We want to show Video call buttons even if only one direction is enabled
+        // (That is what is happening when we receive a video call for example)
+        return CallUtil.isVideoEnabled(context) && (
+            VideoProfile.VideoState.isBidirectional(getVideoState()) ||
+            VideoProfile.VideoState.isReceptionEnabled(getVideoState()) ||
+            VideoProfile.VideoState.isTransmissionEnabled(getVideoState()));
     }
 
     public void setSessionModificationState(int state) {

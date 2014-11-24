@@ -252,7 +252,7 @@ public class CallButtonPresenter extends Presenter<CallButtonPresenter.CallButto
                 new VideoProfile(VideoProfile.VideoState.BIDIRECTIONAL);
         videoCall.sendSessionModifyRequest(videoProfile);
 
-        mCall.setSessionModificationState(Call.SessionModificationState.REQUEST_FAILED);
+        mCall.setSessionModificationState(Call.SessionModificationState.WAITING_FOR_RESPONSE);
     }
 
     /**
@@ -333,24 +333,28 @@ public class CallButtonPresenter extends Presenter<CallButtonPresenter.CallButto
      */
     private void updateCallButtons(Call call, Context context) {
         if (call.isVideoCall(context)) {
-            updateVideoCallButtons();
+            updateVideoCallButtons(call);
         } else {
             updateVoiceCallButtons(call);
         }
     }
 
-    private void updateVideoCallButtons() {
+    private void updateVideoCallButtons(Call call) {
         Log.v(this, "Showing buttons for video call.");
         final CallButtonUi ui = getUi();
+
+        Log.v(this, "Show merge ", call.can(PhoneCapabilities.MERGE_CONFERENCE));
+        Log.v(this, "Show swap ", call.can(PhoneCapabilities.SWAP_CONFERENCE));
+        Log.v(this, "Show add call ", call.can(PhoneCapabilities.ADD_CALL));
 
         // Hide all voice-call-related buttons.
         ui.showAudioButton(false);
         ui.showDialpadButton(false);
         ui.showHoldButton(false);
-        ui.showSwapButton(false);
+        ui.showSwapButton(call.can(PhoneCapabilities.SWAP_CONFERENCE));
         ui.showChangeToVideoButton(false);
-        ui.showAddCallButton(false);
-        ui.showMergeButton(false);
+        ui.showAddCallButton(call.can(PhoneCapabilities.ADD_CALL));
+        ui.showMergeButton(call.can(PhoneCapabilities.MERGE_CONFERENCE));
         ui.showOverflowButton(false);
 
         // Show all video-call-related buttons.
@@ -406,9 +410,9 @@ public class CallButtonPresenter extends Presenter<CallButtonPresenter.CallButto
 
         if (isVideoOverflowScenario) {
             ui.showHoldButton(false);
-            ui.showSwapButton(false);
-            ui.showAddCallButton(false);
-            ui.showMergeButton(false);
+            ui.showSwapButton(showSwapOption);
+            ui.showAddCallButton(showAddCallOption);
+            ui.showMergeButton(showMergeOption);
 
             ui.showOverflowButton(true);
             ui.configureOverflowMenu(

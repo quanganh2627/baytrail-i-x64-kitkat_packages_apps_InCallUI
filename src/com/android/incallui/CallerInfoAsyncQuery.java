@@ -30,6 +30,8 @@ import android.provider.ContactsContract.PhoneLookup;
 import android.telephony.PhoneNumberUtils;
 import android.text.TextUtils;
 
+import com.android.internal.telephony.TelephonyConstants;
+
 /**
  * Helper class to make it easier to run asynchronous caller-id lookup queries.
  * @see CallerInfo
@@ -297,6 +299,23 @@ public class CallerInfoAsyncQuery {
     private CallerInfoAsyncQuery() {
     }
 
+    private static boolean isVoiceMailNumber(String number) {
+        boolean isVoicemail = false;
+
+        if (TelephonyConstants.IS_DSDS) {
+            boolean isSlotOne;
+            isSlotOne = InCallUi.getInstance().isSlotOne();
+            if( isSlotOne ){
+                isVoicemail = PhoneNumberUtils.isVoiceMailNumber(number);
+            } else {
+                isVoicemail = PhoneNumberUtils.isVoiceMailNumber2(number);
+            }
+        } else {
+            isVoicemail = PhoneNumberUtils.isVoiceMailNumber(number);
+        }
+        Log.d(LOG_TAG, "isVoiceMailNumber: " + isVoicemail);
+        return isVoicemail;
+    }
 
     /**
      * Factory method to start query with a Uri query spec
@@ -398,7 +417,7 @@ public class CallerInfoAsyncQuery {
         // check to see if these are recognized numbers, and use shortcuts if we can.
         if (PhoneNumberUtils.isLocalEmergencyNumber(number, context)) {
             cw.event = EVENT_EMERGENCY_NUMBER;
-        } else if (PhoneNumberUtils.isVoiceMailNumber(number)) {
+        } else if (isVoiceMailNumber(number)) {
             cw.event = EVENT_VOICEMAIL_NUMBER;
         } else {
             cw.event = EVENT_NEW_QUERY;

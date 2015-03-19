@@ -31,6 +31,8 @@ import android.graphics.drawable.BitmapDrawable;
 import android.os.Handler;
 import android.os.Message;
 import android.telecom.PhoneAccount;
+import android.telecom.PhoneAccountHandle;
+import android.telecom.TelecomManager;
 import android.text.BidiFormatter;
 import android.text.TextDirectionHeuristics;
 import android.text.TextUtils;
@@ -270,6 +272,8 @@ public class StatusBarNotifier implements InCallPresenter.InCallStateListener {
         final Bitmap largeIcon = getLargeIconToDisplay(contactInfo, call);
         final int contentResId = getContentString(call);
         final String contentTitle = getContentTitle(contactInfo, call);
+        final String lable = getCallProviderLabel(call);
+        String content = mContext.getString(contentResId);
 
         if (!checkForChangeAndSaveData(iconResId, contentResId, largeIcon, contentTitle, state)) {
             return;
@@ -290,10 +294,13 @@ public class StatusBarNotifier implements InCallPresenter.InCallStateListener {
             configureFullScreenIntent(builder, inCallPendingIntent, call);
             // Set the notification category for incoming calls
             builder.setCategory(Notification.CATEGORY_CALL);
+            if (lable != null) {
+                content = mContext.getString(R.string.incoming_via_template, lable);
+            }
         }
 
         // Set the content
-        builder.setContentText(mContext.getString(contentResId));
+        builder.setContentText(content);
         builder.setSmallIcon(iconResId);
         builder.setContentTitle(contentTitle);
         builder.setLargeIcon(largeIcon);
@@ -318,6 +325,22 @@ public class StatusBarNotifier implements InCallPresenter.InCallStateListener {
         Log.d(this, "Notifying IN_CALL_NOTIFICATION: " + notification);
         mNotificationManager.notify(IN_CALL_NOTIFICATION, notification);
         mIsShowingNotification = true;
+    }
+
+    private String getCallProviderLabel(Call call) {
+        PhoneAccountHandle accountHandle = call.getAccountHandle();
+        if (accountHandle == null) {
+            return null;
+        }
+        PhoneAccount account =
+            InCallPresenter.getInstance().getTelecomManager().getPhoneAccount(accountHandle);
+
+        TelecomManager mgr = InCallPresenter.getInstance().getTelecomManager();
+        if (account != null && !TextUtils.isEmpty(account.getLabel())
+                && mgr.hasMultipleCallCapableAccounts()) {
+            return account.getLabel().toString();
+        }
+        return null;
     }
 
     private void createIncomingCallNotification(

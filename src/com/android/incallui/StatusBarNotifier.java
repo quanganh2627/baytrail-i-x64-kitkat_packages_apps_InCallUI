@@ -288,9 +288,11 @@ public class StatusBarNotifier implements InCallPresenter.InCallStateListener {
         final PendingIntent inCallPendingIntent = createLaunchPendingIntent();
         builder.setContentIntent(inCallPendingIntent);
 
-        // Set the intent as a full screen intent as well if a call is incoming
-        if ((state == Call.State.INCOMING || state == Call.State.CALL_WAITING) &&
-                !InCallPresenter.getInstance().isShowingInCallUi()) {
+        /*fix SMS06858014 | |[AZ5_SoFIA-3G_MRD5- P2_FT_Shanghai] [Always] MT call UI alert not displaying during Call selection UI
+        Also allow StatusBarNotifier pop-up, when InCallUi is showed.
+        */
+        if ((state == Call.State.INCOMING || state == Call.State.CALL_WAITING)) {
+            Log.d(this, "state:"+state+" ,add CATEGORY_CALL");
             configureFullScreenIntent(builder, inCallPendingIntent, call);
             // Set the notification category for incoming calls
             builder.setCategory(Notification.CATEGORY_CALL);

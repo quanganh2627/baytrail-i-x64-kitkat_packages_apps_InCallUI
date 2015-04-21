@@ -412,4 +412,6 @@
 
     <!-- This can be used in any application wanting to disable the text "Emergency number" -->
     <string name="emergency_call_dialog_number_for_display">Emergency number</string>
+
+    <string name="incall_error_sim_off">To place a call, first turn on Sim mode.</string>
 </resources>

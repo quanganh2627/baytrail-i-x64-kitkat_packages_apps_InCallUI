@@ -148,4 +148,5 @@
     <string name="preference_category_ringtone" msgid="5197960752529332721">"鈴聲與震動"</string>
     <string name="manageConferenceLabel" msgid="4691922394301969053">"管理會議通話"</string>
     <string name="emergency_call_dialog_number_for_display" msgid="8373041754188879871">"緊急電話號碼"</string>
+    <string name="incall_error_sim_off">要撥打電話, 請先打開SIM卡.</string>
 </resources>

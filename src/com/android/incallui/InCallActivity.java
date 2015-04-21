@@ -718,6 +718,10 @@ public class InCallActivity extends Activity {
                         disconnectCause.getCode() == DisconnectCause.RESTRICTED)) {
             showErrorDialog(disconnectCause.getDescription());
         }
+
+        if (!isFinishing() && disconnectCause.getCode() == DisconnectCause.SIM_OFF) {
+            showErrorDialog(getResources().getString(R.string.incall_error_sim_off));
+        }
     }
 
     public void dismissPendingDialogs() {
